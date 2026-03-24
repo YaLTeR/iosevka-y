@@ -84,11 +84,14 @@ jobs:
       - run: |
           cd iosevka/dist/IosevkaY/TTF
           zip -r "$GITHUB_WORKSPACE/IosevkaY-TTF.zip" .
+          tar cJf "$GITHUB_WORKSPACE/IosevkaY-TTF.tar.xz" .
 
       - uses: actions/upload-artifact@v7
         with:
           name: IosevkaY-TTF-${{ needs.check.outputs.tag }}
-          path: IosevkaY-TTF.zip
+          path: |
+            IosevkaY-TTF.zip
+            IosevkaY-TTF.tar.xz
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
@@ -97,7 +100,7 @@ jobs:
         run: |
           TAG="${{ needs.check.outputs.tag }}"
           SHA=$(git -C iosevka rev-parse HEAD)
-          gh release create "$TAG" IosevkaY-TTF.zip \
+          gh release create "$TAG" IosevkaY-TTF.zip IosevkaY-TTF.tar.xz \
             --title "IosevkaY ($TAG)" \
             --notes "Built from [Iosevka $TAG](https://github.com/be5invis/Iosevka/releases/tag/$TAG) (commit \`${SHA}\`)"
 
