@@ -100,3 +100,11 @@ jobs:
           gh release create "$TAG" IosevkaY-TTF.zip \
             --title "IosevkaY ($TAG)" \
             --notes "Built from [Iosevka $TAG](https://github.com/be5invis/Iosevka/releases/tag/$TAG) (commit \`${SHA}\`)"
+
+  patch:
+    needs: [check, build]
+    uses: ./.github/workflows/patch.yml
+    permissions:
+      contents: write
+    with:
+      tag: ${{ needs.check.outputs.tag }}

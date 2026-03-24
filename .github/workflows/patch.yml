@@ -1,0 +1,55 @@
+name: Patch with Nerd Fonts
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to patch"
+        required: true
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ inputs.tag }}" \
+            --repo ${{ github.repository }} \
+            --pattern IosevkaY-TTF.zip
+
+      - run: |
+          mkdir fonts patched
+          unzip IosevkaY-TTF.zip -d fonts
+
+      - name: Patch with Nerd Fonts
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/fonts:/in \
+            -v ${{ github.workspace }}/patched:/out \
+            -e PN=4 \
+            nerdfonts/patcher --complete --mono --makegroups 6 --no-progressbars
+
+      - run: |
+          cd patched
+          zip -r "$GITHUB_WORKSPACE/IosevkaYNerdFont-TTF.zip" .
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: IosevkaYNerdFont-TTF-${{ inputs.tag }}
+          path: IosevkaYNerdFont-TTF.zip
+
+      - name: Upload to release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ inputs.tag }}" IosevkaYNerdFont-TTF.zip \
+            --repo ${{ github.repository }} --clobber
